@@ -61,16 +61,8 @@ result = minimize(
 
 ### Workflow 1: Single-Objective Optimization
 
-**When:** Optimizing one objective function
+**When:** Optimizing one objective function. Algorithms: GA, DE, PSO, CMA-ES.
 
-**Steps:**
-1. Define or select problem
-2. Choose single-objective algorithm (GA, DE, PSO, CMA-ES)
-3. Configure termination criteria
-4. Run optimization
-5. Extract best solution
-
-**Example:**
 ```python
 from pymoo.algorithms.soo.nonconvex.ga import GA
 from pymoo.problems import get_problem
@@ -102,18 +94,8 @@ print(f"Best objective: {result.F[0]}")
 
 ### Workflow 2: Multi-Objective Optimization (2-3 objectives)
 
-**When:** Optimizing 2-3 conflicting objectives, need Pareto front
+**When:** Optimizing 2-3 conflicting objectives, need Pareto front. Algorithm: NSGA-II (standard for bi/tri-objective).
 
-**Algorithm choice:** NSGA-II (standard for bi/tri-objective)
-
-**Steps:**
-1. Define multi-objective problem
-2. Configure NSGA-II
-3. Run optimization to obtain Pareto front
-4. Visualize trade-offs
-5. Apply decision making (optional)
-
-**Example:**
 ```python
 from pymoo.algorithms.moo.nsga2 import NSGA2
 from pymoo.problems import get_problem
@@ -142,20 +124,8 @@ print(f"Found {len(result.F)} Pareto-optimal solutions")
 
 ### Workflow 3: Many-Objective Optimization (4+ objectives)
 
-**When:** Optimizing 4 or more objectives
+**When:** Optimizing 4+ objectives. Algorithm: NSGA-III. **Key requirement:** must supply reference directions for population guidance.
 
-**Algorithm choice:** NSGA-III (designed for many objectives)
-
-**Key difference:** Must provide reference directions for population guidance
-
-**Steps:**
-1. Define many-objective problem
-2. Generate reference directions
-3. Configure NSGA-III with reference directions
-4. Run optimization
-5. Visualize using Parallel Coordinate Plot
-
-**Example:**
 ```python
 from pymoo.algorithms.moo.nsga3 import NSGA3
 from pymoo.problems import get_problem
@@ -185,13 +155,7 @@ plot.show()
 
 ### Workflow 4: Custom Problem Definition
 
-**When:** Solving domain-specific optimization problem
-
-**Steps:**
-1. Extend `ElementwiseProblem` class
-2. Define `__init__` with problem dimensions and bounds
-3. Implement `_evaluate` method for objectives (and constraints)
-4. Use with any algorithm
+**When:** Solving a domain-specific problem. Extend `ElementwiseProblem`, set dimensions/bounds in `__init__`, implement `_evaluate` for objectives (and constraints).
 
 **Unconstrained example:**
 ```python
@@ -248,9 +212,7 @@ class ConstrainedProblem(ElementwiseProblem):
 
 ### Workflow 5: Constraint Handling
 
-**When:** Problem has feasibility constraints
-
-**Approach options:**
+**When:** Problem has feasibility constraints. Four approaches:
 
 **1. Feasibility First (Default - Recommended)**
 ```python
@@ -293,14 +255,7 @@ algorithm = SRES()
 
 ### Workflow 6: Decision Making from Pareto Front
 
-**When:** Have Pareto front, need to select preferred solution(s)
-
-**Steps:**
-1. Run multi-objective optimization
-2. Normalize objectives to [0, 1]
-3. Define preference weights
-4. Apply MCDM method
-5. Visualize selected solution
+**When:** Have a Pareto front, need to select preferred solution(s). Pipeline: optimize → normalize objectives → set weights → apply MCDM.
 
 **Example using Pseudo-Weights:**
 ```python
@@ -475,40 +430,21 @@ algorithm = GA(
 
 ## Performance and Troubleshooting
 
-### Common issues and solutions:
+| Symptom | Fixes |
+|---|---|
+| Not converging | Increase pop size / generations; try different algorithm (multimodal); verify constraint formulation |
+| Poor Pareto distribution | Adjust reference directions (NSGA-III); larger pop; enable duplicate elimination; check scaling |
+| Few feasible solutions | Constraint-as-objective; repair operators; SRES/ISRES; verify `g(x) <= 0` formulation |
+| High compute cost | Smaller pop / fewer generations; simpler operators; parallelize if supported |
 
-**Problem: Algorithm not converging**
-- Increase population size
-- Increase number of generations
-- Check if problem is multimodal (try different algorithms)
-- Verify constraints are correctly formulated
-
-**Problem: Poor Pareto front distribution**
-- For NSGA-III: Adjust reference directions
-- Increase population size
-- Check for duplicate elimination
-- Verify problem scaling
-
-**Problem: Few feasible solutions**
-- Use constraint-as-objective approach
-- Apply repair operators
-- Try SRES/ISRES for constrained problems
-- Check constraint formulation (should be g <= 0)
-
-**Problem: High computational cost**
-- Reduce population size
-- Decrease number of generations
-- Use simpler operators
-- Enable parallelization (if problem supports)
-
-### Best practices:
+### Best practices
 
 1. **Normalize objectives** when scales differ significantly
-2. **Set random seed** for reproducibility
-3. **Save history** to analyze convergence: `save_history=True`
+2. **Set `seed`** for reproducibility
+3. **`save_history=True`** to analyze convergence
 4. **Visualize results** to understand solution quality
 5. **Compare with true Pareto front** when available
-6. **Use appropriate termination criteria** (generations, evaluations, tolerance)
+6. **Pick appropriate termination** (`('n_gen', N)`, evaluations, tolerance)
 7. **Tune operator parameters** for problem characteristics
 
 ## Resources
@@ -549,21 +485,12 @@ python3 scripts/decision_making_example.py
 
 ## Additional Notes
 
-**Installation:**
-```bash
-uv pip install pymoo
-```
-
-**Dependencies:** NumPy, SciPy, matplotlib, autograd (optional for gradient-based)
-
-**Documentation:** https://pymoo.org/
-
-**Version:** This skill is based on pymoo 0.6.x
+**Install:** `uv pip install pymoo` (deps: NumPy, SciPy, matplotlib; optional `autograd` for gradient-based). **Docs:** <https://pymoo.org/>. **Target version:** pymoo 0.6.x.
 
 **Common patterns:**
-- Always use `ElementwiseProblem` for custom problems
-- Constraints formulated as `g(x) <= 0` and `h(x) = 0`
-- Reference directions required for NSGA-III
+- Use `ElementwiseProblem` for custom problems
+- Constraints: `g(x) <= 0` and `h(x) = 0`; convert `g(x) >= b` via `-(g(x) - b) <= 0`
+- NSGA-III requires reference directions
 - Normalize objectives before MCDM
-- Use appropriate termination: `('n_gen', N)` or `get_termination("f_tol", tol=0.001)`
+- Termination: `('n_gen', N)` or `get_termination("f_tol", tol=0.001)`
 
