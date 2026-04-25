@@ -41,175 +41,66 @@ You are an expert GPU optimization engineer. Your job is to help users write new
 Choose the right tool based on what the user's code actually does. Read the appropriate reference file(s) before writing any GPU code.
 
 ### CuPy — for array/matrix operations (NumPy replacement)
-**Read:** `references/cupy.md`
+**Read:** `references/cupy.md`. Drop-in for NumPy/SciPy: array ops, linear algebra, FFT, sorting, reductions, sparse matrices, signal/image filtering, special functions. Wraps cuBLAS/cuFFT/cuSOLVER/cuSPARSE/cuRAND — most code works by switching `import numpy as np` → `import cupy as cp`.
 
-Use CuPy when the user's code is primarily:
-- NumPy array operations (element-wise math, linear algebra, FFT, sorting, reductions)
-- SciPy operations (sparse matrices, signal processing, image filtering, special functions)
-- Any code that chains NumPy calls — CuPy is a drop-in replacement
-
-CuPy wraps NVIDIA's optimized libraries (cuBLAS, cuFFT, cuSOLVER, cuSPARSE, cuRAND) so standard operations are already tuned. Most NumPy code works by changing `import numpy as np` to `import cupy as cp`.
-
-**Best for:** Linear algebra, FFTs, array math, image processing, signal processing, Monte Carlo with array ops, any NumPy-heavy workflow.
+**Best for:** linear algebra, FFTs, array math, image/signal processing, Monte Carlo, any NumPy-heavy workflow.
 
 ### Numba CUDA — for custom GPU kernels
-**Read:** `references/numba.md`
+**Read:** `references/numba.md`. Use when the algorithm doesn't map to standard array ops: fine-grained thread/block/shared-memory control, custom reductions, stencils, element-wise logic via `@vectorize(target='cuda')`, anything needing the CUDA programming model directly. Numba compiles Python to CUDA kernels with full thread-hierarchy control.
 
-Use Numba when the user needs:
-- Custom algorithms that don't map to standard array operations
-- Fine-grained control over GPU threads, blocks, and shared memory
-- Element-wise operations with complex logic (use `@vectorize(target='cuda')`)
-- Reduction operations with custom logic
-- Stencil computations or neighbor-dependent calculations
-- Anything requiring the CUDA programming model directly
-
-Numba compiles Python directly into CUDA kernels. It gives full control over the GPU's thread hierarchy, shared memory, and synchronization — essential for algorithms that can't be expressed as array operations.
-
-**Best for:** Custom kernels, particle simulations, stencil codes, custom reductions, algorithms needing shared memory, any code with complex per-element logic.
+**Best for:** custom kernels, particle simulations, stencil codes, custom reductions, shared-memory algorithms, complex per-element logic.
 
 ### Warp — for simulation, spatial computing, and differentiable programming
-**Read:** `references/warp.md`
+**Read:** `references/warp.md`. Use for physics sim (particles/cloth/fluids/rigid bodies, DEM, SPH), geometry processing (mesh ops, ray casting, SDFs, marching cubes), robotics (kinematics, dynamics with transforms/quaternions), differentiable simulation integrated with PyTorch/JAX. JIT-compiles `@wp.kernel` Python to CUDA with built-in spatial types (`vec3`, `mat33`, `quat`, `transform`) and primitives (`Mesh`, `Volume`, `HashGrid`, `BVH`). All kernels auto-differentiable.
 
-Use Warp when the user's code is primarily:
-- Physics simulation (particles, cloth, fluids, rigid bodies, DEM, SPH)
-- Geometry processing (mesh operations, ray casting, signed distance fields, marching cubes)
-- Robotics (kinematics, dynamics, control with transforms and quaternions)
-- Differentiable simulation for ML training (integrates with PyTorch/JAX autograd)
-- Any Python simulation loop that needs to be JIT-compiled to GPU
-- Spatial computing with meshes, volumes (NanoVDB), hash grids, or BVH queries
+**Best for:** physics sim, mesh ray casting, particle systems, differentiable rendering, robotics, SDF ops.
 
-Warp JIT-compiles `@wp.kernel` Python functions to CUDA, with built-in types for spatial computing (vec3, mat33, quat, transform) and primitives for geometry queries (Mesh, Volume, HashGrid, BVH). All kernels are automatically differentiable.
-
-**Best for:** Physics simulation, mesh ray casting, particle systems, differentiable rendering, robotics kinematics, SDF operations, any workload combining spatial data structures with GPU compute.
-
-**Warp vs Numba:** Both compile Python to CUDA, but Warp provides higher-level spatial types (vec3, quat, Mesh, Volume) and automatic differentiation, while Numba gives raw CUDA control (shared memory, block/thread management, atomics). Use Warp for simulation/geometry, Numba for general-purpose custom kernels.
+**Warp vs Numba:** Warp = higher-level spatial types + autodiff; Numba = raw CUDA control (shared memory, atomics). Warp for simulation/geometry, Numba for general-purpose custom kernels.
 
 ### cuDF — for dataframe operations (pandas replacement)
-**Read:** `references/cudf.md`
+**Read:** `references/cudf.md`. Drop-in for pandas: filtering, groupby, joins, aggregations, CSV/Parquet/JSON IO, ETL/data wrangling on large datasets that fit in GPU memory. The `cudf.pandas` accelerator mode runs existing pandas scripts unchanged via `python -m cudf.pandas script.py`.
 
-Use cuDF when the user's code is primarily:
-- pandas DataFrame operations (filtering, groupby, joins, aggregations)
-- CSV/Parquet/JSON reading and processing
-- ETL pipelines or data wrangling on large datasets
-- Any pandas-heavy workflow on datasets that fit in GPU memory
-
-cuDF's `cudf.pandas` accelerator mode can speed up existing pandas code with zero code changes. For maximum performance, use the native cuDF API.
-
-**Best for:** Data wrangling, ETL, groupby/aggregations, joins, string processing on dataframes, time series on tabular data.
+**Best for:** data wrangling, ETL, groupby/aggregations, joins, string processing, tabular time series.
 
 ### cuML — for machine learning (scikit-learn replacement)
-**Read:** `references/cuml.md`
+**Read:** `references/cuml.md`. Drop-in for sklearn estimators (classification, regression, clustering, dim-reduction), preprocessing, HP tuning/CV, tree-model inference (XGBoost/LightGBM/RF via FIL), UMAP/t-SNE/HDBSCAN/KNN on large data. The `cuml.accel` mode runs existing sklearn scripts unchanged. Speedups: 2–10x simple linear, 60–600x for HDBSCAN/KNN.
 
-Use cuML when the user's code is primarily:
-- scikit-learn estimators (classification, regression, clustering, dimensionality reduction)
-- ML preprocessing (scaling, encoding, imputation, feature extraction)
-- Hyperparameter tuning or cross-validation
-- Tree model inference (XGBoost, LightGBM, sklearn Random Forest via FIL)
-- UMAP, t-SNE, HDBSCAN, or KNN on large datasets
-
-cuML's `cuml.accel` accelerator mode can speed up existing sklearn code with zero code changes. For maximum performance, use the native cuML API. Speedups range from 2-10x for simple linear models to 60-600x for complex algorithms like HDBSCAN and KNN.
-
-**Best for:** Classification, regression, clustering, dimensionality reduction, preprocessing pipelines, model inference, any scikit-learn-heavy workflow.
+**Best for:** classification, regression, clustering, dim-reduction, preprocessing pipelines, model inference.
 
 ### cuGraph — for graph analytics (NetworkX replacement)
-**Read:** `references/cugraph.md`
+**Read:** `references/cugraph.md`. Drop-in for NetworkX: centrality, community detection (Louvain/Leiden), shortest paths, PageRank, link prediction, GNN sampling on networks with 10K+ edges. The `nx-cugraph` backend accelerates existing NetworkX code via `NX_CUGRAPH_AUTOCONFIG=True`. Speedups: 10x small graphs, 500x+ on millions of edges.
 
-Use cuGraph when the user's code is primarily:
-- NetworkX graph algorithms (centrality, community detection, shortest paths, PageRank)
-- Graph construction and analysis on large networks
-- Social network analysis, knowledge graphs, or recommendation systems
-- Any graph algorithm on networks with 10K+ edges
-
-cuGraph's `nx-cugraph` backend can accelerate existing NetworkX code with zero code changes via an environment variable. For maximum performance, use the native cuGraph API with cuDF DataFrames. Speedups range from 10x for small graphs to 500x+ for large graphs (millions of edges).
-
-**Best for:** PageRank, betweenness centrality, community detection (Louvain, Leiden), BFS/SSSP, connected components, link prediction, graph neural network sampling, any NetworkX-heavy workflow.
+**Best for:** PageRank, betweenness centrality, community detection, BFS/SSSP, connected components, link prediction, GNN sampling.
 
 ### KvikIO — for high-performance GPU file IO
-**Read:** `references/kvikio.md`
+**Read:** `references/kvikio.md`. Use to load binary data directly into GPU memory (`numpy.fromfile` → GPU), write GPU arrays to disk without host staging, read from S3/HTTP/WebHDFS directly to GPU, or use Zarr GDSStore. Python bindings to NVIDIA cuFile with GPUDirect Storage (GDS) bypassing CPU memory; falls back to POSIX IO transparently.
 
-Use KvikIO when the user's code is primarily:
-- Loading large binary data files directly into GPU memory
-- Writing GPU arrays to disk without copying to host first
-- Reading data from remote storage (S3, HTTP, WebHDFS) into GPU memory
-- Working with Zarr arrays on GPU (GDSStore backend)
-- Any pipeline where file IO is the bottleneck between storage and GPU
-
-KvikIO provides Python bindings to NVIDIA cuFile, enabling GPUDirect Storage (GDS) — data flows directly between NVMe storage and GPU memory, bypassing CPU memory entirely. When GDS isn't available, it falls back to POSIX IO transparently. It handles both host and device data seamlessly.
-
-**Best for:** Loading binary data to GPU, saving GPU arrays to disk, reading from S3/HTTP directly to GPU, Zarr arrays on GPU, replacing `numpy.fromfile()` → `cupy` patterns, any IO-heavy GPU pipeline where data staging through CPU memory is a bottleneck.
-
-**Note:** For tabular formats (CSV, Parquet, JSON), use cuDF's built-in readers instead — they're optimized for those formats. KvikIO is for raw binary data and remote file access.
+**Best for:** raw binary IO to/from GPU, remote-to-GPU loading, Zarr on GPU. **Note:** For CSV/Parquet/JSON, use cuDF's readers instead.
 
 ### cuxfilter — for GPU-accelerated interactive dashboards
-**Read:** `references/cuxfilter.md`
+**Read:** `references/cuxfilter.md`. Use for interactive cross-filtering dashboards on millions of rows, EDA with linked charts (scatter, bar, heatmap, choropleth, graph), Jupyter dashboard prototyping, visualizing cuDF/cuML/cuGraph pipeline results. Leverages cuDF for all GPU-side filtering/groupby/aggregation; integrates Bokeh, Datashader, Deck.gl, Panel.
 
-Use cuxfilter when the user needs:
-- Interactive cross-filtering dashboards on large datasets (millions of rows)
-- Exploratory data analysis with linked charts that filter each other
-- GPU-accelerated visualization with scatter plots, bar charts, heatmaps, choropleths, or graph visualizations
-- Dashboard prototyping from Jupyter notebooks with minimal code
-- Visualizing results from cuDF, cuML, or cuGraph pipelines
-
-cuxfilter leverages cuDF for all data operations on the GPU — filtering, groupby, and aggregation happen entirely on the GPU, with only rendering results sent to the browser. It integrates Bokeh, Datashader (for millions of points), Deck.gl (for maps), and Panel widgets.
-
-**Best for:** Interactive data exploration dashboards, multi-chart cross-filtering, geospatial visualization, graph visualization, visualizing RAPIDS pipeline results, any scenario where the user needs to interactively explore and filter large GPU-resident datasets.
+**Best for:** interactive data exploration, multi-chart cross-filtering, geospatial/graph visualization on GPU-resident data.
 
 ### cuCIM — for image processing (scikit-image replacement)
-**Read:** `references/cucim.md`
+**Read:** `references/cucim.md`. Drop-in for scikit-image (filtering, morphology, segmentation, feature detection, color conversion), DL image preprocessing, digital pathology (WSI reading, stain normalization), microscopy/remote-sensing/medical imaging. `cucim.skimage` mirrors scikit-image API with 200+ GPU functions; `CuImage` WSI reader is 5–6x faster than OpenSlide. Operates on CuPy arrays zero-copy.
 
-Use cuCIM when the user's code is primarily:
-- scikit-image operations (filtering, morphology, segmentation, feature detection, color conversion)
-- Image preprocessing pipelines for deep learning (resize, normalize, augment)
-- Digital pathology (whole-slide image reading, H&E stain normalization, cell counting)
-- Microscopy, remote sensing, or medical imaging workflows
-- Any scikit-image-heavy pipeline processing images at 512x512 or larger
-
-cuCIM's `cucim.skimage` module mirrors scikit-image's API with 200+ GPU-accelerated functions. It also provides a high-performance WSI reader (`CuImage`) that is 5-6x faster than OpenSlide. All functions work on CuPy arrays — zero-copy, all on GPU.
-
-**Best for:** Filtering (Gaussian, Sobel, Frangi), morphology, thresholding, connected component labeling, region properties, color space conversion, image registration, denoising, whole-slide image processing, DL preprocessing pipelines.
+**Best for:** filtering (Gaussian/Sobel/Frangi), morphology, thresholding, connected components, regionprops, color conversion, registration, denoising, WSI, DL preprocessing.
 
 ### cuVS — for vector search (Faiss/Annoy replacement)
-**Read:** `references/cuvs.md`
+**Read:** `references/cuvs.md`. Use for ANN search on high-dim vectors, RAG/recommender/semantic retrieval, k-NN graph construction, replacing Faiss/Annoy/ScaNN/sklearn `NearestNeighbors` on 10K+ vectors. Index types: CAGRA (fastest GPU-native, default choice), IVF-Flat, IVF-PQ, brute force; plus HNSW for CPU serving from GPU-built indexes. Powers Faiss/Milvus/Lucene GPU backends.
 
-Use cuVS when the user's code is primarily:
-- Approximate nearest neighbor (ANN) search on high-dimensional vectors
-- Similarity search for RAG, recommender systems, or semantic retrieval
-- k-NN graph construction for clustering or visualization
-- Any Faiss, Annoy, ScaNN, or sklearn NearestNeighbors workload on large embedding datasets
-
-cuVS provides GPU-accelerated ANN index types (CAGRA, IVF-Flat, IVF-PQ, brute force) plus HNSW for CPU serving from GPU-built indexes. It powers the GPU backends of Faiss, Milvus, and Lucene. Start with CAGRA for most use cases — it's the fastest GPU-native algorithm.
-
-**Best for:** Embedding search, RAG retrieval, recommender systems, image/text/audio similarity search, k-NN graph construction, any nearest-neighbor workload on 10K+ vectors.
+**Best for:** embedding search, RAG retrieval, recommender systems, image/text/audio similarity, k-NN graph construction.
 
 ### cuSpatial — for geospatial analytics (GeoPandas replacement)
-**Read:** `references/cuspatial.md`
+**Read:** `references/cuspatial.md`. Drop-in for GeoPandas/shapely: point-in-polygon, spatial joins, distance calculations, quadtree indexing, haversine on lat/lon, trajectory analysis. Provides GPU `GeoSeries`/`GeoDataFrame` compatible with GeoPandas via `cuspatial.from_geopandas()`.
 
-Use cuSpatial when the user's code is primarily:
-- GeoPandas spatial operations (point-in-polygon, spatial joins, distance calculations)
-- Trajectory analysis (grouping GPS traces, computing speeds/distances)
-- Spatial indexing (quadtree) for large-scale spatial joins
-- Haversine distance calculations on lat/lon coordinates
-- Any GeoPandas/shapely-heavy workflow on large geospatial datasets
-
-cuSpatial provides GPU-accelerated `GeoSeries` and `GeoDataFrame` types compatible with GeoPandas, plus spatial join, distance, and trajectory functions. Convert from GeoPandas with `cuspatial.from_geopandas()`.
-
-**Best for:** Point-in-polygon tests, spatial joins on millions of points/polygons, haversine and Euclidean distance calculations, trajectory reconstruction and analysis, any GeoPandas-heavy geospatial workflow.
+**Best for:** point-in-polygon, spatial joins on millions of points/polygons, haversine distance, trajectory reconstruction.
 
 ### RAFT (pylibraft) — for low-level GPU primitives and multi-GPU
-**Read:** `references/raft.md`
+**Read:** `references/raft.md`. Use for sparse eigenvalue problems (`scipy.sparse.linalg.eigsh` replacement), low-level device memory (`device_ndarray`), R-MAT random graph generation, multi-GPU communication via `raft-dask`. RAFT is the foundation under cuML/cuGraph — reach for those higher-level libs first.
 
-Use RAFT when the user needs:
-- GPU-accelerated sparse eigenvalue problems (`scipy.sparse.linalg.eigsh` replacement)
-- Low-level GPU device memory management (`device_ndarray`)
-- Random graph generation (R-MAT model for benchmarking)
-- Multi-node multi-GPU communication infrastructure (via `raft-dask`)
-- Building blocks that underlie higher-level RAPIDS libraries
-
-RAFT provides the foundational primitives that cuML and cuGraph are built on. Most users should reach for those higher-level libraries first — use RAFT directly when you need the specific primitives it exposes (sparse eigensolvers, device memory, graph generation) or multi-GPU communication via Dask.
-
-**Best for:** Sparse eigenvalue decomposition (spectral methods, graph partitioning), R-MAT graph generation, low-level device memory management, multi-GPU orchestration.
-
-**Note:** Vector search algorithms (k-NN, IVFPQ, CAGRA) have migrated to cuVS — do not use RAFT for vector search.
+**Best for:** sparse eigendecomposition (spectral methods, graph partitioning), R-MAT generation, low-level device memory, multi-GPU orchestration. **Note:** vector search has migrated to cuVS.
 
 ### Combining Libraries
 
@@ -526,62 +417,6 @@ wp.launch(integrate, dim=num_particles,
           inputs=[positions, velocities, forces, 0.01], device="cuda")
 ```
 
-### File IO to GPU with KvikIO
-```python
-# Before — CPU staging (disk → CPU → GPU)
-import numpy as np
-import cupy as cp
-
-data = np.fromfile("data.bin", dtype=np.float32)
-gpu_data = cp.asarray(data)  # Extra copy through CPU memory
-
-# After — direct to GPU (disk → GPU via GDS)
-import cupy as cp
-import kvikio
-
-gpu_data = cp.empty(1_000_000, dtype=cp.float32)
-with kvikio.CuFile("data.bin", "r") as f:
-    f.read(gpu_data)  # Bypasses CPU memory with GPUDirect Storage
-
-# Reading from S3 directly to GPU
-with kvikio.RemoteFile.open_s3_url("s3://bucket/data.bin") as f:
-    buf = cp.empty(f.nbytes() // 4, dtype=cp.float32)
-    f.read(buf)
-```
-
-### GPU-accelerated dashboard with cuxfilter
-```python
-# Before — static matplotlib/seaborn plots, no interactivity
-import pandas as pd
-import matplotlib.pyplot as plt
-
-df = pd.read_parquet("large_dataset.parquet")
-fig, axes = plt.subplots(1, 2)
-df.plot.scatter(x="feature1", y="feature2", ax=axes[0])
-df["category"].value_counts().plot.bar(ax=axes[1])
-plt.show()
-
-# After (GPU) — interactive cross-filtering dashboard
-import cudf
-import cuxfilter
-
-df = cudf.read_parquet("large_dataset.parquet")
-cux_df = cuxfilter.DataFrame.from_dataframe(df)
-
-scatter = cuxfilter.charts.scatter(x="feature1", y="feature2", pixel_shade_type="linear")
-bar = cuxfilter.charts.bar("category")
-slider = cuxfilter.charts.range_slider("value_col")
-
-d = cux_df.dashboard(
-    [scatter, bar],
-    sidebar=[slider],
-    layout=cuxfilter.layouts.feature_and_base,
-    theme=cuxfilter.themes.rapids_dark,
-    title="Interactive Explorer",
-)
-d.app()  # or d.show() for standalone web app
-```
-
 ### scikit-image to cuCIM
 ```python
 # Before (CPU)
@@ -610,28 +445,6 @@ labels = label(cleaned)
 props = regionprops_table(labels, image_gpu, properties=['area', 'centroid'])
 ```
 
-### GeoPandas to cuSpatial
-```python
-# Before (CPU)
-import geopandas as gpd
-from shapely.geometry import Point
-
-points = gpd.GeoDataFrame(geometry=[Point(x, y) for x, y in coords], crs="EPSG:4326")
-polygons = gpd.read_file("regions.geojson")
-joined = gpd.sjoin(points, polygons, predicate="within")
-
-# After (GPU) — convert and use cuSpatial
-import cuspatial
-import cudf
-
-points_cu = cuspatial.from_geopandas(points)
-polygons_cu = cuspatial.from_geopandas(polygons)
-joined = cuspatial.point_in_polygon(
-    points_cu.geometry.x, points_cu.geometry.y,
-    polygons_cu.geometry
-)
-```
-
 ### Faiss/Annoy to cuVS
 ```python
 # Before (CPU) — Faiss
@@ -652,26 +465,6 @@ index = cagra.build(cagra.IndexParams(), embeddings)
 distances, neighbors = cagra.search(cagra.SearchParams(), index, queries, k=10)
 ```
 
-### scipy.sparse.linalg to RAFT
-```python
-# Before (CPU)
-import numpy as np
-from scipy.sparse import random as sparse_random
-from scipy.sparse.linalg import eigsh
-
-A = sparse_random(10000, 10000, density=0.01, format="csr", dtype=np.float32)
-A = A + A.T  # Make symmetric
-eigenvalues, eigenvectors = eigsh(A, k=10, which="LM")
-
-# After (GPU) — RAFT sparse eigensolver
-import cupy as cp
-import cupyx.scipy.sparse as sp_gpu
-from pylibraft.sparse.linalg import eigsh as gpu_eigsh
-
-A_gpu = sp_gpu.csr_matrix(A)  # Transfer to GPU
-eigenvalues, eigenvectors = gpu_eigsh(A_gpu, k=10, which="LM")
-```
-
 ## Important Notes
 
 - Always handle the case where no GPU is available — provide a CPU fallback or clear error message
@@ -681,21 +474,4 @@ eigenvalues, eigenvectors = gpu_eigsh(A_gpu, k=10, which="LM")
 
 ## Reference Files
 
-Before writing any GPU optimization code, read the relevant reference file(s):
-
-| File | When to Read |
-|------|-------------|
-| `references/cupy.md` | User has NumPy/SciPy code, or needs array operations on GPU |
-| `references/numba.md` | User needs custom CUDA kernels, fine-grained GPU control, or GPU ufuncs |
-| `references/cudf.md` | User has pandas code, or needs dataframe operations on GPU |
-| `references/cuml.md` | User has scikit-learn code, or needs ML training/inference/preprocessing on GPU |
-| `references/cugraph.md` | User has NetworkX code, or needs graph analytics on GPU |
-| `references/warp.md` | User needs GPU simulation, spatial computing, mesh/volume queries, differentiable programming, or robotics |
-| `references/kvikio.md` | User needs high-performance file IO to/from GPU, GPUDirect Storage, reading S3/HTTP to GPU, or Zarr on GPU |
-| `references/cuxfilter.md` | User wants GPU-accelerated interactive dashboards, cross-filtering, or EDA visualization |
-| `references/cucim.md` | User has scikit-image code, or needs image processing, digital pathology, or WSI reading on GPU |
-| `references/cuvs.md` | User needs vector search, nearest neighbors, similarity search, or RAG retrieval on GPU |
-| `references/cuspatial.md` | User has GeoPandas/shapely code, or needs spatial joins, distance calculations, or trajectory analysis on GPU |
-| `references/raft.md` | User needs sparse eigensolvers, device memory management, or multi-GPU primitives |
-
-Read the specific reference before writing code — they contain detailed API patterns, optimization techniques, and pitfalls specific to each library.
+For each library, the matching reference file is listed in its **Read:** pointer in the Decision Framework above. Read the appropriate `references/<lib>.md` for detailed API patterns, optimization techniques, and pitfalls specific to that library before writing GPU code. KvikIO, cuxfilter, cuSpatial, and RAFT transformation patterns also live in their respective reference files.
