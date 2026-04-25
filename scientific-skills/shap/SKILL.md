@@ -145,73 +145,23 @@ shap.plots.waterfall(shap_values[0])
 
 ### Workflow 2: Model Debugging
 
-**Goal**: Identify and fix model issues
-
-**Steps**:
-1. Compute SHAP values
-2. Identify prediction errors
-3. Explain misclassified samples
-4. Check for unexpected feature importance (data leakage)
-5. Validate feature relationships make sense
-6. Check feature interactions
-
-**See `references/workflows.md` for detailed debugging workflow.**
+**Goal:** Identify and fix model issues. **Steps:** compute SHAP → identify prediction errors → explain misclassified samples → detect unexpected importance (data leakage) → validate relationships → check interactions. **See** `references/workflows.md`.
 
 ### Workflow 3: Feature Engineering
 
-**Goal**: Use SHAP insights to improve features
-
-**Steps**:
-1. Compute SHAP values for baseline model
-2. Identify nonlinear relationships (candidates for transformation)
-3. Identify feature interactions (candidates for interaction terms)
-4. Engineer new features
-5. Retrain and compare SHAP values
-6. Validate improvements
-
-**See `references/workflows.md` for detailed feature engineering workflow.**
+**Goal:** Use SHAP insights to improve features. **Steps:** baseline SHAP → spot nonlinear relationships (transform candidates) → spot interactions (interaction-term candidates) → engineer features → retrain and re-check SHAP. **See** `references/workflows.md`.
 
 ### Workflow 4: Model Comparison
 
-**Goal**: Compare multiple models to select best interpretable option
-
-**Steps**:
-1. Train multiple models
-2. Compute SHAP values for each
-3. Compare global feature importance
-4. Check consistency of feature rankings
-5. Analyze specific predictions across models
-6. Select based on accuracy, interpretability, and consistency
-
-**See `references/workflows.md` for detailed model comparison workflow.**
+**Goal:** Pick the best interpretable model among candidates. **Steps:** train multiple → SHAP each → compare global importance + ranking consistency → inspect divergent predictions → select on accuracy + interpretability. **See** `references/workflows.md`.
 
 ### Workflow 5: Fairness and Bias Analysis
 
-**Goal**: Detect and analyze model bias across demographic groups
-
-**Steps**:
-1. Identify protected attributes (gender, race, age, etc.)
-2. Compute SHAP values
-3. Compare feature importance across groups
-4. Check protected attribute SHAP importance
-5. Identify proxy features
-6. Implement mitigation strategies if bias found
-
-**See `references/workflows.md` for detailed fairness analysis workflow.**
+**Goal:** Detect bias across demographic groups. **Steps:** flag protected attributes → SHAP → compare importance across groups → check protected-attribute SHAP → hunt for proxy features → mitigate. **See** `references/workflows.md`.
 
 ### Workflow 6: Production Deployment
 
-**Goal**: Integrate SHAP explanations into production systems
-
-**Steps**:
-1. Train and save model
-2. Create and save explainer
-3. Build explanation service
-4. Create API endpoints for predictions with explanations
-5. Implement caching and optimization
-6. Monitor explanation quality
-
-**See `references/workflows.md` for detailed production deployment workflow.**
+**Goal:** Serve SHAP explanations in production. **Steps:** save model + explainer → build explanation service → expose predict-with-explanation API → add caching → monitor explanation quality. **See** `references/workflows.md`.
 
 ## Key Concepts
 
@@ -437,82 +387,12 @@ class ExplanationService:
 
 ## Reference Documentation
 
-This skill includes comprehensive reference documentation organized by topic:
+- **`references/explainers.md`** — every explainer class (`Tree`, `Deep`, `Kernel`, `Linear`, `Gradient`, `Permutation`): constructor parameters, supported models, when to use, performance.
+- **`references/plots.md`** — every plot (waterfall, beeswarm, bar, scatter, force, heatmap, violin, decision): parameters, use cases, plot selection guide.
+- **`references/workflows.md`** — step-by-step recipes for the 6 core workflows above plus deep-learning, time-series, MLOps, common pitfalls.
+- **`references/theory.md`** — mathematical foundations: Shapley values, Tree/Kernel SHAP algorithms, conditional expectations, interaction values, comparison with LIME/DeepLIFT.
 
-### references/explainers.md
-Complete guide to all explainer classes:
-- `TreeExplainer` - Fast, exact explanations for tree-based models
-- `DeepExplainer` - Deep learning models (TensorFlow, PyTorch)
-- `KernelExplainer` - Model-agnostic (works with any model)
-- `LinearExplainer` - Fast explanations for linear models
-- `GradientExplainer` - Gradient-based for neural networks
-- `PermutationExplainer` - Exact but slow for any model
-
-Includes: Constructor parameters, methods, supported models, when to use, examples, performance considerations.
-
-### references/plots.md
-Comprehensive visualization guide:
-- **Waterfall plots** - Individual prediction breakdowns
-- **Beeswarm plots** - Global importance with value distributions
-- **Bar plots** - Clean feature importance summaries
-- **Scatter plots** - Feature-prediction relationships and interactions
-- **Force plots** - Interactive additive force visualizations
-- **Heatmap plots** - Multi-sample comparison grids
-- **Violin plots** - Distribution-focused alternatives
-- **Decision plots** - Multiclass prediction paths
-
-Includes: Parameters, use cases, examples, best practices, plot selection guide.
-
-### references/workflows.md
-Detailed workflows and best practices:
-- Basic model explanation workflow
-- Model debugging and validation
-- Feature engineering guidance
-- Model comparison and selection
-- Fairness and bias analysis
-- Deep learning model explanation
-- Production deployment
-- Time series model explanation
-- Common pitfalls and solutions
-- Advanced techniques
-- MLOps integration
-
-Includes: Step-by-step instructions, code examples, decision criteria, troubleshooting.
-
-### references/theory.md
-Theoretical foundations:
-- Shapley values from game theory
-- Mathematical formulas and properties
-- Connection to other explanation methods (LIME, DeepLIFT, etc.)
-- SHAP computation algorithms (Tree SHAP, Kernel SHAP, etc.)
-- Conditional expectations and baseline selection
-- Interpreting SHAP values
-- Interaction values
-- Theoretical limitations and considerations
-
-Includes: Mathematical foundations, proofs, comparisons, advanced topics.
-
-## Usage Guidelines
-
-**When to load reference files**:
-- Load `explainers.md` when user needs detailed information about specific explainer types or parameters
-- Load `plots.md` when user needs detailed visualization guidance or exploring plot options
-- Load `workflows.md` when user has complex multi-step tasks (debugging, fairness analysis, production deployment)
-- Load `theory.md` when user asks about theoretical foundations, Shapley values, or mathematical details
-
-**Default approach** (without loading references):
-- Use this SKILL.md for basic explanations and quick start
-- Provide standard workflows and common patterns
-- Reference files are available if more detail is needed
-
-**Loading references**:
-```python
-# To load reference files, use the Read tool with appropriate file path:
-# /path/to/shap/references/explainers.md
-# /path/to/shap/references/plots.md
-# /path/to/shap/references/workflows.md
-# /path/to/shap/references/theory.md
-```
+Load a reference when the user needs depth beyond what this body covers; the body itself is sufficient for quick-start, common patterns, and standard troubleshooting.
 
 ## Best Practices Summary
 
