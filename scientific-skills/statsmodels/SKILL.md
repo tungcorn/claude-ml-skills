@@ -432,157 +432,28 @@ print(f"CV RMSE: {np.mean(cv_scores):.4f} ± {np.std(cv_scores):.4f}")
 
 ## Best Practices
 
-### Data Preparation
-
-1. **Always add constant**: Use `sm.add_constant()` unless excluding intercept
-2. **Check for missing values**: Handle or impute before fitting
-3. **Scale if needed**: Improves convergence, interpretation (but not required for tree models)
-4. **Encode categoricals**: Use formula API or manual dummy coding
-
-### Model Building
-
-1. **Start simple**: Begin with basic model, add complexity as needed
-2. **Check assumptions**: Test residuals, heteroskedasticity, autocorrelation
-3. **Use appropriate model**: Match model to outcome type (binary→Logit, count→Poisson)
-4. **Consider alternatives**: If assumptions violated, use robust methods or different model
-
-### Inference
-
-1. **Report effect sizes**: Not just p-values
-2. **Use robust SEs**: When heteroskedasticity or clustering present
-3. **Multiple comparisons**: Correct when testing many hypotheses
-4. **Confidence intervals**: Always report alongside point estimates
-
-### Model Evaluation
-
-1. **Check residuals**: Plot residuals vs fitted, Q-Q plot
-2. **Influence diagnostics**: Identify and investigate influential observations
-3. **Out-of-sample validation**: Test on holdout set or cross-validate
-4. **Compare models**: Use AIC/BIC for non-nested, LR test for nested
-
-### Reporting
-
-1. **Comprehensive summary**: Use `.summary()` for detailed output
-2. **Document decisions**: Note transformations, excluded observations
-3. **Interpret carefully**: Account for link functions (e.g., exp(β) for log link)
-4. **Visualize**: Plot predictions, confidence intervals, diagnostics
+- **Data prep** — always `sm.add_constant()` for intercept; handle missing values; scale if needed for convergence; encode categoricals via formula API or dummy coding.
+- **Model building** — start simple and add complexity only as needed; check assumptions (residuals, heteroskedasticity, autocorrelation); match model to outcome type (binary → `Logit`, count → `Poisson`); switch to robust methods or alternative model if assumptions break.
+- **Inference** — report effect sizes alongside p-values; use robust SEs (HC/HAC/cluster) when heteroskedasticity or clustering present; correct for multiple comparisons; always include confidence intervals.
+- **Evaluation** — plot residuals vs fitted + Q-Q; check Cook's distance / leverage / DFFITS; validate on holdout or via CV; compare via AIC/BIC (non-nested) or LR test (nested).
+- **Reporting** — use `.summary()` for full output; document transformations and excluded observations; interpret per link function (`exp(β)` for log link); visualize predictions + CI + diagnostics.
 
 ## Common Workflows
 
-### Workflow 1: Linear Regression Analysis
-
-1. Explore data (plots, descriptives)
-2. Fit initial OLS model
-3. Check residual diagnostics
-4. Test for heteroskedasticity, autocorrelation
-5. Check for multicollinearity (VIF)
-6. Identify influential observations
-7. Refit with robust SEs if needed
-8. Interpret coefficients and inference
-9. Validate on holdout or via CV
-
-### Workflow 2: Binary Classification
-
-1. Fit logistic regression (Logit)
-2. Check for convergence issues
-3. Interpret odds ratios
-4. Calculate marginal effects
-5. Evaluate classification performance (AUC, confusion matrix)
-6. Check for influential observations
-7. Compare with alternative models (Probit)
-8. Validate predictions on test set
-
-### Workflow 3: Count Data Analysis
-
-1. Fit Poisson regression
-2. Check for overdispersion
-3. If overdispersed, fit Negative Binomial
-4. Check for excess zeros (consider ZIP/ZINB)
-5. Interpret rate ratios
-6. Assess goodness of fit
-7. Compare models via AIC
-8. Validate predictions
-
-### Workflow 4: Time Series Forecasting
-
-1. Plot series, check for trend/seasonality
-2. Test for stationarity (ADF, KPSS)
-3. Difference if non-stationary
-4. Identify p, q from ACF/PACF
-5. Fit ARIMA or SARIMAX
-6. Check residual diagnostics (Ljung-Box)
-7. Generate forecasts with confidence intervals
-8. Evaluate forecast accuracy on test set
+- **Linear Regression Analysis** — EDA → fit OLS → residual diagnostics → heteroskedasticity / autocorrelation tests → VIF for multicollinearity → influence diagnostics → robust SEs if needed → interpret → validate (holdout or CV).
+- **Binary Classification** — fit `Logit` → check convergence → interpret odds ratios → marginal effects → AUC + confusion matrix → influence check → compare with `Probit` → holdout validation.
+- **Count Data Analysis** — fit Poisson → check overdispersion → switch to Negative Binomial if needed → check zero-inflation (ZIP/ZINB) → interpret rate ratios → GoF → AIC compare → validate.
+- **Time Series Forecasting** — plot for trend/seasonality → ADF/KPSS stationarity → difference if needed → ACF/PACF for `p, q` → fit ARIMA/SARIMAX → Ljung-Box on residuals → forecast with CI → evaluate on test set.
 
 ## Reference Documentation
 
-This skill includes comprehensive reference files for detailed guidance:
+- **`references/linear_models.md`** — OLS, WLS, GLS, GLSAR, quantile regression, mixed effects, recursive/rolling. Covers diagnostics (heteroskedasticity, autocorrelation, multicollinearity, influence), robust SEs (HC/HAC/cluster), hypothesis testing, model comparison.
+- **`references/glm.md`** — every distribution family (Binomial, Poisson, NegBin, Gamma, IG, Tweedie), link functions, IRLS fitting, deviance/Pearson residuals, pseudo R².
+- **`references/discrete_choice.md`** — binary (Logit/Probit), multinomial (MNLogit, Conditional), ordinal, count (Poisson/NegBin/ZIP/ZINB/Hurdle); marginal effects and interpretation.
+- **`references/time_series.md`** — univariate (AR, ARIMA, SARIMAX, ETS), multivariate (VAR, VARMAX, VECM, Dynamic Factor), state space, stationarity tests, forecast evaluation, Granger/IRF/FEVD.
+- **`references/stats_diagnostics.md`** — residual diagnostics (autocorr, heteroskedasticity, normality), influence/outliers, parametric and non-parametric tests, ANOVA, multiple-comparison correction, robust covariance, power analysis.
 
-### references/linear_models.md
-Detailed coverage of linear regression models including:
-- OLS, WLS, GLS, GLSAR, Quantile Regression
-- Mixed effects models
-- Recursive and rolling regression
-- Comprehensive diagnostics (heteroskedasticity, autocorrelation, multicollinearity)
-- Influence statistics and outlier detection
-- Robust standard errors (HC, HAC, cluster)
-- Hypothesis testing and model comparison
-
-### references/glm.md
-Complete guide to generalized linear models:
-- All distribution families (Binomial, Poisson, Gamma, etc.)
-- Link functions and when to use each
-- Model fitting and interpretation
-- Pseudo R-squared and goodness of fit
-- Diagnostics and residual analysis
-- Applications (logistic, Poisson, Gamma regression)
-
-### references/discrete_choice.md
-Comprehensive guide to discrete outcome models:
-- Binary models (Logit, Probit)
-- Multinomial models (MNLogit, Conditional Logit)
-- Count models (Poisson, Negative Binomial, Zero-Inflated, Hurdle)
-- Ordinal models
-- Marginal effects and interpretation
-- Model diagnostics and comparison
-
-### references/time_series.md
-In-depth time series analysis guidance:
-- Univariate models (AR, ARIMA, SARIMAX, Exponential Smoothing)
-- Multivariate models (VAR, VARMAX, Dynamic Factor)
-- State space models
-- Stationarity testing and diagnostics
-- Forecasting methods and evaluation
-- Granger causality, IRF, FEVD
-
-### references/stats_diagnostics.md
-Comprehensive statistical testing and diagnostics:
-- Residual diagnostics (autocorrelation, heteroskedasticity, normality)
-- Influence and outlier detection
-- Hypothesis tests (parametric and non-parametric)
-- ANOVA and post-hoc tests
-- Multiple comparisons correction
-- Robust covariance matrices
-- Power analysis and effect sizes
-
-**When to reference:**
-- Need detailed parameter explanations
-- Choosing between similar models
-- Troubleshooting convergence or diagnostic issues
-- Understanding specific test statistics
-- Looking for code examples for advanced features
-
-**Search patterns:**
-```bash
-# Find information about specific models
-grep -r "Quantile Regression" references/
-
-# Find diagnostic tests
-grep -r "Breusch-Pagan" references/stats_diagnostics.md
-
-# Find time series guidance
-grep -r "SARIMAX" references/time_series.md
-```
+Load a reference for parameter detail, similar-model comparison, troubleshooting, or advanced features. Use `grep -r "<term>" references/` to locate specific tests or models.
 
 ## Common Pitfalls to Avoid
 
