@@ -320,44 +320,20 @@ averaged_pred, weights = model_averaging(models, var_name='y_obs')
 
 ### For Priors
 
-**Scale parameters** (σ, τ):
-- `pm.HalfNormal('sigma', sigma=1)` - Default choice
-- `pm.Exponential('sigma', lam=1)` - Alternative
-- `pm.Gamma('sigma', alpha=2, beta=1)` - More informative
-
-**Unbounded parameters**:
-- `pm.Normal('theta', mu=0, sigma=1)` - For standardized data
-- `pm.StudentT('theta', nu=3, mu=0, sigma=1)` - Robust to outliers
-
-**Positive parameters**:
-- `pm.LogNormal('theta', mu=0, sigma=1)`
-- `pm.Gamma('theta', alpha=2, beta=1)`
-
-**Probabilities**:
-- `pm.Beta('p', alpha=2, beta=2)` - Weakly informative
-- `pm.Uniform('p', lower=0, upper=1)` - Non-informative (use sparingly)
-
-**Correlation matrices**:
-- `pm.LKJCorr('corr', n=n_vars, eta=2)` - eta=1 uniform, eta>1 prefers identity
+- **Scale parameters** (σ, τ) — `pm.HalfNormal('sigma', sigma=1)` (default), `pm.Exponential('sigma', lam=1)`, `pm.Gamma('sigma', alpha=2, beta=1)` (more informative)
+- **Unbounded** — `pm.Normal('theta', mu=0, sigma=1)` for standardized data; `pm.StudentT('theta', nu=3, mu=0, sigma=1)` for robust priors
+- **Positive** — `pm.LogNormal('theta', mu=0, sigma=1)`, `pm.Gamma('theta', alpha=2, beta=1)`
+- **Probabilities** — `pm.Beta('p', alpha=2, beta=2)` (weakly informative); use `pm.Uniform` sparingly
+- **Correlation matrices** — `pm.LKJCorr('corr', n=n_vars, eta=2)` (eta=1 uniform, eta>1 prefers identity)
 
 ### For Likelihoods
 
-**Continuous outcomes**:
-- `pm.Normal('y', mu=mu, sigma=sigma)` - Default for continuous data
-- `pm.StudentT('y', nu=nu, mu=mu, sigma=sigma)` - Robust to outliers
+- **Continuous** — `pm.Normal('y', mu=mu, sigma=sigma)` (default), `pm.StudentT('y', nu=nu, mu=mu, sigma=sigma)` (robust)
+- **Count** — `pm.Poisson('y', mu=lambda_)` (equidispersed), `pm.NegativeBinomial('y', mu=mu, alpha=alpha)` (overdispersed), `pm.ZeroInflatedPoisson('y', psi=psi, mu=mu)` (excess zeros)
+- **Binary** — `pm.Bernoulli('y', p=p)` or `pm.Bernoulli('y', logit_p=logit_p)`
+- **Categorical** — `pm.Categorical('y', p=probs)`
 
-**Count data**:
-- `pm.Poisson('y', mu=lambda)` - Equidispersed counts
-- `pm.NegativeBinomial('y', mu=mu, alpha=alpha)` - Overdispersed counts
-- `pm.ZeroInflatedPoisson('y', psi=psi, mu=mu)` - Excess zeros
-
-**Binary outcomes**:
-- `pm.Bernoulli('y', p=p)` or `pm.Bernoulli('y', logit_p=logit_p)`
-
-**Categorical outcomes**:
-- `pm.Categorical('y', p=probs)`
-
-**See:** `references/distributions.md` for comprehensive distribution reference
+**See:** `references/distributions.md` for the comprehensive distribution catalog.
 
 ## Sampling and Inference
 
@@ -414,23 +390,7 @@ create_diagnostic_report(
 )
 ```
 
-Creates:
-- Trace plots
-- Rank plots (mixing check)
-- Autocorrelation plots
-- Energy plots
-- ESS evolution
-- Summary statistics CSV
-
-### Quick Diagnostic Check
-
-```python
-from scripts.model_diagnostics import check_diagnostics
-
-results = check_diagnostics(idata)
-```
-
-Checks R-hat, ESS, divergences, and tree depth.
+Creates: trace plots, rank plots (mixing check), autocorrelation plots, energy plots, ESS evolution, summary statistics CSV. For lightweight runtime checks (R-hat, ESS, divergences, tree depth) use `check_diagnostics(idata)` shown earlier in step 5 of the workflow.
 
 ## Common Issues and Solutions
 
@@ -523,46 +483,10 @@ This skill includes:
 
 - **`hierarchical_model_template.py`**: Complete template for hierarchical/multilevel models with non-centered parameterization and group-level analysis.
 
-## Quick Reference
+## Tips
 
-### Model Building
-```python
-with pm.Model(coords={'var': names}) as model:
-    # Priors
-    param = pm.Normal('param', mu=0, sigma=1, dims='var')
-    # Likelihood
-    y = pm.Normal('y', mu=..., sigma=..., observed=data)
-```
-
-### Sampling
-```python
-idata = pm.sample(draws=2000, tune=1000, chains=4, target_accept=0.9)
-```
-
-### Diagnostics
-```python
-from scripts.model_diagnostics import check_diagnostics
-check_diagnostics(idata)
-```
-
-### Model Comparison
-```python
-from scripts.model_comparison import compare_models
-compare_models({'m1': idata1, 'm2': idata2}, ic='loo')
-```
-
-### Predictions
-```python
-with model:
-    pm.set_data({'X': X_new})
-    pred = pm.sample_posterior_predictive(idata.posterior)
-```
-
-## Additional Notes
-
-- PyMC integrates with ArviZ for visualization and diagnostics
-- Use `pm.model_to_graphviz(model)` to visualize model structure
-- Save results with `idata.to_netcdf('results.nc')`
-- Load with `az.from_netcdf('results.nc')`
+- Visualize model structure with `pm.model_to_graphviz(model)`
+- Persist results: `idata.to_netcdf('results.nc')` / `az.from_netcdf('results.nc')`
 - For very large models, consider minibatch ADVI or data subsampling
+- See `references/workflows.md` for end-to-end model recipes
 
